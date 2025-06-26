@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, DatePicker, TimePicker, Button, Typography, Space, Tag, Input } from 'antd';
+import { Modal, Form, DatePicker, TimePicker, Button, Typography, Space, Tag, Input, Select } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,10 +7,12 @@ import { useApp } from '../../contexts/AppContext';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const { user } = useAuth();
   const { createAppointment } = useApp();
 
@@ -19,14 +21,13 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
     
     try {
       const appointmentData = {
-        userId: user.id,
+        userId: user._id || user.id,
         doctorId: doctor._id || doctor.id,
-        doctorName: doctor.name,
-        userName: user.name,
         date: values.date.format('YYYY-MM-DD'),
-        time: values.time.format('HH:mm'),
+        time: typeof values.time === 'string' ? values.time : values.time.format('HH:mm'),
         reason: values.reason,
         notes: values.notes || '',
+        status: 'pending'
       };
 
       const result = await createAppointment(appointmentData);
@@ -44,12 +45,32 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
 
   const handleCancel = () => {
     form.resetFields();
+    setSelectedDate(null);
     onCancel();
   };
 
   const disabledDate = (current) => {
-    // Disable past dates
     return current && current < moment().startOf('day');
+  };
+
+  const getAvailableTimes = () => {
+    if (!selectedDate || !doctor.availability) return [];
+    
+    const dayName = selectedDate.format('dddd');
+    const availableSlot = doctor.availability.find(slot => slot.day === dayName);
+    
+    if (!availableSlot) return [];
+    
+    const times = [];
+    const start = moment(availableSlot.startTime, 'HH:mm');
+    const end = moment(availableSlot.endTime, 'HH:mm');
+    
+    while (start.isBefore(end)) {
+      times.push(start.format('HH:mm'));
+      start.add(30, 'minutes');
+    }
+    
+    return times;
   };
 
   const disabledTime = (selectedDate) => {
@@ -72,7 +93,14 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
     };
   };
 
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    form.setFieldsValue({ time: null });
+  };
+
   if (!doctor) return null;
+
+  const availableTimes = getAvailableTimes();
 
   return (
     <Modal
@@ -85,26 +113,36 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
       open={visible}
       onCancel={handleCancel}
       footer={null}
-      width={500}
+      width={600}
     >
       <div style={{ marginBottom: '24px' }}>
         <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-          {doctor.name}
+          Dr. {doctor.name}
         </Title>
-        <Tag color="blue">{doctor.specialty || doctor.specialization}</Tag>
-        <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
-          {typeof doctor.location === 'object' && doctor.location 
-            ? `${doctor.location.hospital}, ${doctor.location.address}, ${doctor.location.city}, ${doctor.location.state} ${doctor.location.zipCode}`
-            : doctor.location || 'Location not specified'
-          }
-        </Text>
+        <Tag color="blue">{doctor.specialty}</Tag>
+        <div style={{ marginTop: '8px' }}>
+          <Text type="secondary">
+            {doctor.location?.hospital}, {doctor.location?.address}
+          </Text>
+        </div>
+        <div style={{ marginTop: '8px' }}>
+          <Text type="secondary">
+            {doctor.location?.city}, {doctor.location?.state} {doctor.location?.zipCode}
+          </Text>
+        </div>
+        <div style={{ marginTop: '8px' }}>
+          <Text type="secondary">Phone: {doctor.contact?.phone}</Text>
+        </div>
+        <div style={{ marginTop: '8px' }}>
+          <Text type="secondary">Consultation Fee: ${doctor.consultationFee}</Text>
+        </div>
         
         <div style={{ marginTop: '16px' }}>
           <Text strong>Available Days: </Text>
           <Space wrap>
-            {doctor.availability && doctor.availability.map((availabilitySlot, index) => (
+            {doctor.availability && doctor.availability.map((slot, index) => (
               <Tag key={index} color="green" size="small">
-                {typeof availabilitySlot === 'object' ? availabilitySlot.day : availabilitySlot}
+                {slot.day} ({slot.startTime} - {slot.endTime})
               </Tag>
             ))}
           </Space>
@@ -127,22 +165,46 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
             disabledDate={disabledDate}
             placeholder="Select date"
             format="YYYY-MM-DD"
+            onChange={handleDateChange}
           />
         </Form.Item>
 
-        <Form.Item
-          name="time"
-          label="Appointment Time"
-          rules={[{ required: true, message: 'Please select a time!' }]}
-        >
-          <TimePicker
-            style={{ width: '100%' }}
-            format="HH:mm"
-            placeholder="Select time"
-            minuteStep={15}
-            disabledTime={disabledTime}
-          />
-        </Form.Item>
+        {selectedDate && availableTimes.length > 0 ? (
+          <Form.Item
+            name="time"
+            label="Available Time Slots"
+            rules={[{ required: true, message: 'Please select a time!' }]}
+          >
+            <Select placeholder="Select an available time slot" style={{ width: '100%' }}>
+              {availableTimes.map(time => (
+                <Option key={time} value={time}>
+                  {moment(time, 'HH:mm').format('h:mm A')}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        ) : selectedDate && availableTimes.length === 0 ? (
+          <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fff2e8', border: '1px solid #ffbb96', borderRadius: '6px' }}>
+            <Text type="warning">
+              Dr. {doctor.name} is not available on {selectedDate.format('dddd')}. Please select another date.
+            </Text>
+          </div>
+        ) : (
+          <Form.Item
+            name="time"
+            label="Appointment Time"
+            rules={[{ required: true, message: 'Please select a time!' }]}
+          >
+            <TimePicker
+              style={{ width: '100%' }}
+              format="HH:mm"
+              placeholder="First select a date to see available times"
+              minuteStep={30}
+              disabled={!selectedDate}
+              disabledTime={disabledTime}
+            />
+          </Form.Item>
+        )}
 
         <Form.Item
           name="reason"
@@ -179,6 +241,7 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
               htmlType="submit"
               loading={loading}
               icon={<ClockCircleOutlined />}
+              disabled={selectedDate && availableTimes.length === 0}
             >
               Book Appointment
             </Button>
