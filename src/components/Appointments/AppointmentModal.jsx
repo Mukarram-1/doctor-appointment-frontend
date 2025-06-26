@@ -91,7 +91,7 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
         <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
           {doctor.name}
         </Title>
-        <Tag color="blue">{doctor.specialty}</Tag>
+        <Tag color="blue">{doctor.specialty || doctor.specialization}</Tag>
         <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
           {typeof doctor.location === 'object' && doctor.location 
             ? `${doctor.location.hospital}, ${doctor.location.address}, ${doctor.location.city}, ${doctor.location.state} ${doctor.location.zipCode}`

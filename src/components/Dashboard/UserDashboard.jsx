@@ -50,7 +50,8 @@ const UserDashboard = () => {
 
   const loadUserAppointments = async () => {
     if (user?.id) {
-      await fetchAppointments({ userId: user.id });
+      const userId = user._id || user.id;
+      await fetchAppointments({ userId });
     }
   };
 

@@ -40,7 +40,7 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
             {doctor.name}
           </Title>
           <Tag color="blue" style={{ marginTop: '8px' }}>
-            {doctor.specialty}
+            {doctor.specialty || doctor.specialization}
           </Tag>
         </div>
       }

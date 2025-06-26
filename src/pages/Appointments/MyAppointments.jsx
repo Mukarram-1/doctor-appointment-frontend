@@ -19,20 +19,22 @@ const MyAppointments = () => {
 
   useEffect(() => {
     loadUserAppointments();
-  }, [user?.id]);
+  }, [user?._id, user?.id]);
 
   useEffect(() => {
+    const userId = user?._id || user?.id;
     const myAppointments = appointments
-      .filter(apt => apt.userId === user?.id)
+      .filter(apt => apt.userId === userId)
       .sort((a, b) => new Date(b.date) - new Date(a.date));
     setUserAppointments(myAppointments);
     setLoading(false);
-  }, [appointments, user?.id]);
+  }, [appointments, user?._id, user?.id]);
 
   const loadUserAppointments = async () => {
-    if (user?.id) {
+    const userId = user?._id || user?.id;
+    if (userId) {
       setLoading(true);
-      await fetchAppointments({ userId: user.id });
+      await fetchAppointments({ userId });
     }
   };
 

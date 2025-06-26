@@ -48,7 +48,7 @@ export const AppProvider = ({ children }) => {
   const updateDoctor = async (id, doctorData) => {
     try {
       const updatedDoctor = await doctorService.updateDoctor(id, doctorData);
-      setDoctors(prev => prev.map(doc => doc.id === id ? updatedDoctor : doc));
+      setDoctors(prev => prev.map(doc => (doc._id || doc.id) === id ? updatedDoctor : doc));
       message.success('Doctor updated successfully');
       return { success: true, data: updatedDoctor };
     } catch (error) {
@@ -60,7 +60,7 @@ export const AppProvider = ({ children }) => {
   const deleteDoctor = async (id) => {
     try {
       await doctorService.deleteDoctor(id);
-      setDoctors(prev => prev.filter(doc => doc.id !== id));
+      setDoctors(prev => prev.filter(doc => (doc._id || doc.id) !== id));
       message.success('Doctor deleted successfully');
       return { success: true };
     } catch (error) {
@@ -99,7 +99,7 @@ export const AppProvider = ({ children }) => {
   const updateAppointmentStatus = async (id, status) => {
     try {
       const updatedAppointment = await appointmentService.updateAppointmentStatus(id, status);
-      setAppointments(prev => prev.map(apt => apt.id === id ? updatedAppointment : apt));
+      setAppointments(prev => prev.map(apt => (apt._id || apt.id) === id ? updatedAppointment : apt));
       message.success(`Appointment ${status} successfully`);
       return { success: true, data: updatedAppointment };
     } catch (error) {

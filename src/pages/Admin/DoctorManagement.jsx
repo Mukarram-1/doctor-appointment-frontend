@@ -69,7 +69,7 @@ const DoctorManagement = () => {
 
   const handleFormSubmit = async (values) => {
     if (editingDoctor) {
-      await updateDoctor(editingDoctor.id, values);
+      await updateDoctor(editingDoctor._id || editingDoctor.id, values);
     } else {
       await createDoctor(values);
     }
@@ -91,7 +91,7 @@ const DoctorManagement = () => {
           />
           <div>
             <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>{record.email}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px' }}>{record.contact?.email || record.email}</div>
           </div>
         </div>
       ),
@@ -122,14 +122,14 @@ const DoctorManagement = () => {
       dataIndex: 'fee',
       key: 'fee',
       width: 100,
-      render: (fee) => <span className="font-semibold text-gray-900">${fee}</span>,
+      render: (fee, record) => <span className="font-semibold text-gray-900">${fee || record.consultationFee || 'N/A'}</span>,
     },
     {
       title: 'Contact',
       dataIndex: 'phone',
       key: 'phone',
       width: 140,
-      render: (phone) => <span className="text-gray-600">{phone}</span>,
+      render: (phone, record) => <span className="text-gray-600">{phone || record.contact?.phone || 'N/A'}</span>,
     },
     {
       title: 'Actions',
@@ -149,7 +149,7 @@ const DoctorManagement = () => {
           <Popconfirm
             title="Delete Doctor"
             description="Are you sure you want to delete this doctor?"
-            onConfirm={() => handleDeleteDoctor(record.id)}
+            onConfirm={() => handleDeleteDoctor(record._id || record.id)}
             okText="Yes"
             cancelText="No"
           >
@@ -207,7 +207,7 @@ const DoctorManagement = () => {
         <Table
           columns={columns}
           dataSource={filteredDoctors}
-          rowKey="id"
+          rowKey={(record) => record._id || record.id}
           loading={loading}
           pagination={{
             pageSize: 10,
