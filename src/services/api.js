@@ -12,7 +12,6 @@ const api = axios.create({
   withCredentials: true, // Include cookies for refresh token
 });
 
-// Flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -28,7 +27,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -42,7 +40,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -77,10 +74,8 @@ api.interceptors.response.use(
           const { accessToken } = response.data.data;
           localStorage.setItem('accessToken', accessToken);
           
-          // Process the queue of failed requests
           processQueue(null, accessToken);
           
-          // Retry the original request
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           isRefreshing = false;
           return api(originalRequest);
@@ -91,16 +86,13 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         
-        // Clear storage and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
         
-        // Don't show error message for login/register requests
         if (!originalRequest.url?.includes('/auth/login') && 
             !originalRequest.url?.includes('/auth/register')) {
           message.error('Session expired. Please login again.');
           
-          // Redirect to login page if not already there
           if (window.location.pathname !== '/login') {
             window.location.href = '/login';
           }
@@ -110,9 +102,7 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle other errors
     if (error.response?.data?.message) {
-      // Don't show validation errors as they're handled by forms
       if (error.response.status !== 400 && 
           !error.config?.url?.includes('/auth/login') && 
           !error.config?.url?.includes('/auth/register')) {
