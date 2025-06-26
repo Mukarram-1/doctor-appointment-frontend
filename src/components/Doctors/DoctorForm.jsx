@@ -37,7 +37,6 @@ const DoctorForm = ({ doctor, onSubmit, onCancel }) => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      // Map specialty back to specialization for consistency
       const formattedValues = {
         ...values,
         specialization: values.specialty

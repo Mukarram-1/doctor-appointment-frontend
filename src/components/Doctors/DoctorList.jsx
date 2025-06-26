@@ -10,7 +10,6 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
       className="h-full hover:shadow-lg transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden"
       bodyStyle={{ padding: 0 }}
     >
-      {/* Header Section */}
       <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Avatar 
@@ -20,7 +19,7 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
           />
           <div className="text-center sm:text-left flex-1">
             <Title level={4} className="!mb-1 !text-gray-900">
-              Dr. {doctor.name}
+              {doctor.name}
             </Title>
             <Text className="text-gray-600 text-base block mb-2">
               {doctor.specialization}
@@ -35,9 +34,7 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="p-6 space-y-4">
-        {/* Experience & Fee */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-gray-50 p-3 rounded-lg">
             <Text className="text-gray-500 text-xs uppercase tracking-wide block mb-1">
@@ -57,7 +54,6 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
           </div>
         </div>
 
-        {/* Contact Info */}
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-gray-600">
             <PhoneOutlined className="text-primary-600 w-4" />
@@ -69,7 +65,6 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
           </div>
         </div>
 
-        {/* Availability */}
         <div className="border-t border-gray-100 pt-4">
           <div className="flex items-center gap-2 mb-3">
             <ClockCircleOutlined className="text-primary-600" />
@@ -97,7 +92,6 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
         </div>
       </div>
 
-      {/* Footer Section */}
       <div className="p-6 pt-0">
         <Button 
           type="primary" 
@@ -148,14 +142,12 @@ const DoctorList = ({ doctors, onBookAppointment, loading }) => {
 
   return (
     <div className="space-y-6">
-      {/* Results Count */}
       <div className="flex items-center justify-between">
         <Text className="text-gray-600">
           Showing {doctors.length} doctor{doctors.length !== 1 ? 's' : ''}
         </Text>
       </div>
 
-      {/* Doctor Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {doctors.map((doctor) => (
           <DoctorCard
