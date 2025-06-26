@@ -1,5 +1,5 @@
 import { Row, Col, Card, Button, Typography, Tag, Avatar, Rate, Skeleton } from 'antd';
-import { UserOutlined, ClockCircleOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import { UserOutlined, ClockCircleOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useApp } from '../../contexts/AppContext';
 
 const { Text, Title } = Typography;
@@ -59,10 +59,7 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
             <PhoneOutlined className="text-primary-600 w-4" />
             <Text className="text-sm">{doctor.phone}</Text>
           </div>
-          <div className="flex items-center gap-3 text-gray-600">
-            <MailOutlined className="text-primary-600 w-4" />
-            <Text className="text-sm break-all">{doctor.email}</Text>
-          </div>
+
         </div>
 
         <div className="border-t border-gray-100 pt-4">
