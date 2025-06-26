@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Table, Button, Tag, Typography, Input, Select, Space, Tooltip, message } from 'antd';
 import { 
   SearchOutlined, 
@@ -8,7 +8,8 @@ import {
   ClockCircleOutlined,
   UserOutlined,
   CalendarOutlined,
-  PhoneOutlined
+  PhoneOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { useApp } from '../../contexts/AppContext';
 import appointmentService from '../../services/appointmentService';
@@ -17,27 +18,32 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const ManageAppointments = () => {
-  const { appointments, setAppointments } = useApp();
-  const [loading, setLoading] = useState(false);
+  const { appointments, fetchAppointments, loading } = useApp();
+  const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  useEffect(() => {
+    loadAppointments();
+  }, []);
+
+  const loadAppointments = async () => {
+    await fetchAppointments();
+  };
+
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     try {
-      setLoading(true);
+      setActionLoading(true);
       await appointmentService.updateAppointmentStatus(appointmentId, newStatus);
       
-      const updatedAppointments = appointments.map(apt => 
-        apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-      );
-      setAppointments(updatedAppointments);
+      await loadAppointments();
       
       message.success(`Appointment ${newStatus} successfully`);
     } catch (error) {
       console.error('Error updating appointment status:', error);
       message.error('Failed to update appointment status');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -49,6 +55,8 @@ const ManageAppointments = () => {
         return <ClockCircleOutlined className="text-orange-500" />;
       case 'cancelled':
         return <CloseCircleOutlined className="text-red-500" />;
+      case 'completed':
+        return <CheckCircleOutlined className="text-blue-500" />;
       default:
         return <ClockCircleOutlined className="text-gray-500" />;
     }
@@ -62,18 +70,37 @@ const ManageAppointments = () => {
         return 'orange';
       case 'cancelled':
         return 'red';
+      case 'completed':
+        return 'blue';
       default:
         return 'default';
     }
   };
 
-  const filteredAppointments = appointments?.filter(appointment => {
+  const formatAppointmentData = (appointments) => {
+    return appointments.map(appointment => ({
+      ...appointment,
+      key: appointment._id || appointment.id,
+      patientName: appointment.userId?.name || appointment.patientName || 'N/A',
+      patientEmail: appointment.userId?.email || appointment.patientEmail || 'N/A',
+      doctorName: appointment.doctorId?.name || appointment.doctorName || 'N/A',
+      doctorSpecialization: appointment.doctorId?.specialty || appointment.doctorSpecialization || 'N/A',
+      fee: appointment.doctorId?.consultationFee || appointment.fee || 0,
+      patientPhone: appointment.userId?.phone || appointment.patientPhone || 'N/A',
+      date: new Date(appointment.date).toLocaleDateString(),
+      time: appointment.time
+    }));
+  };
+
+  const formattedAppointments = formatAppointmentData(appointments || []);
+
+  const filteredAppointments = formattedAppointments.filter(appointment => {
     const matchesSearch = appointment.patientName?.toLowerCase().includes(searchText.toLowerCase()) ||
                          appointment.doctorName?.toLowerCase().includes(searchText.toLowerCase());
     const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
     
     return matchesSearch && matchesStatus;
-  }) || [];
+  });
 
   const columns = [
     {
@@ -129,14 +156,13 @@ const ManageAppointments = () => {
       ),
     },
     {
-      title: 'Contact',
-      key: 'contact',
-      width: 140,
+      title: 'Reason',
+      key: 'reason',
+      width: 200,
       render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <PhoneOutlined className="text-gray-400" />
-          <Text className="text-gray-600 text-sm">{record.patientPhone}</Text>
-        </div>
+        <Text className="text-gray-600 text-sm">
+          {record.reason || 'N/A'}
+        </Text>
       ),
     },
     {
@@ -178,8 +204,8 @@ const ManageAppointments = () => {
                 size="small"
                 type="primary"
                 icon={<CheckCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'confirmed')}
-                loading={loading}
+                onClick={() => handleStatusUpdate(record._id || record.id, 'confirmed')}
+                loading={actionLoading}
                 className="bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 flex-1"
               >
                 Confirm
@@ -188,8 +214,8 @@ const ManageAppointments = () => {
                 size="small"
                 danger
                 icon={<CloseCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'cancelled')}
-                loading={loading}
+                onClick={() => handleStatusUpdate(record._id || record.id, 'cancelled')}
+                loading={actionLoading}
                 className="flex-1"
               >
                 Cancel
@@ -197,16 +223,28 @@ const ManageAppointments = () => {
             </div>
           )}
           {record.status === 'confirmed' && (
-            <Button
-              size="small"
-              danger
-              block
-              icon={<CloseCircleOutlined />}
-              onClick={() => handleStatusUpdate(record.id, 'cancelled')}
-              loading={loading}
-            >
-              Cancel
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="small"
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleStatusUpdate(record._id || record.id, 'completed')}
+                loading={actionLoading}
+                className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 flex-1"
+              >
+                Complete
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={() => handleStatusUpdate(record._id || record.id, 'cancelled')}
+                loading={actionLoading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
           )}
           {record.status === 'cancelled' && (
             <Button
@@ -214,8 +252,8 @@ const ManageAppointments = () => {
               type="primary"
               block
               icon={<CheckCircleOutlined />}
-              onClick={() => handleStatusUpdate(record.id, 'confirmed')}
-              loading={loading}
+              onClick={() => handleStatusUpdate(record._id || record.id, 'confirmed')}
+              loading={actionLoading}
               className="bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700"
             >
               Reactivate
@@ -240,6 +278,14 @@ const ManageAppointments = () => {
             </Text>
           </div>
           <div className="flex items-center gap-4">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={loadAppointments}
+              loading={loading}
+              className="flex items-center"
+            >
+              Refresh
+            </Button>
             <div className="bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm">
               <Text className="text-sm text-gray-500">Total:</Text>
               <Text className="font-semibold text-gray-900 ml-2 text-lg">
@@ -249,97 +295,109 @@ const ManageAppointments = () => {
           </div>
         </div>
 
-      {/* Filters */}
-      <Card className="rounded-xl shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search by patient or doctor name..."
-              prefix={<SearchOutlined className="text-gray-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="h-10 rounded-lg"
-              size="large"
+        {/* Filters */}
+        <Card className="rounded-xl shadow-sm border border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by patient or doctor name..."
+                prefix={<SearchOutlined className="text-gray-400" />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="h-10 rounded-lg"
+                size="large"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                className="w-40"
+                size="large"
+                suffixIcon={<FilterOutlined className="text-gray-400" />}
+              >
+                <Option value="all">All Status</Option>
+                <Option value="pending">Pending</Option>
+                <Option value="confirmed">Confirmed</Option>
+                <Option value="completed">Completed</Option>
+                <Option value="cancelled">Cancelled</Option>
+              </Select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Appointments Table */}
+        <Card className="rounded-xl shadow-sm border border-gray-200">
+          <div className="overflow-hidden">
+            <Table
+              columns={columns}
+              dataSource={filteredAppointments}
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => 
+                  `${range[0]}-${range[1]} of ${total} appointments`,
+                className: "mt-4",
+              }}
+              scroll={{ x: 1200 }}
+              className="appointments-table"
+              rowClassName={() => 'hover:bg-gray-50 transition-colors'}
             />
           </div>
-          <div className="flex gap-3">
-            <Select
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="w-40"
-              size="large"
-              suffixIcon={<FilterOutlined className="text-gray-400" />}
-            >
-              <Option value="all">All Status</Option>
-              <Option value="pending">Pending</Option>
-              <Option value="confirmed">Confirmed</Option>
-              <Option value="cancelled">Cancelled</Option>
-            </Select>
-          </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Appointments Table */}
-      <Card className="rounded-xl shadow-sm border border-gray-200">
-        <div className="overflow-hidden">
-          <Table
-            columns={columns}
-            dataSource={filteredAppointments}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => 
-                `${range[0]}-${range[1]} of ${total} appointments`,
-              className: "mt-4",
-            }}
-            scroll={{ x: 1200 }}
-            className="appointments-table"
-            rowClassName={() => 'hover:bg-gray-50 transition-colors'}
-          />
+        {/* Status Summary */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-green-50">
+            <div className="space-y-2">
+              <CheckCircleOutlined className="text-4xl text-green-600" />
+              <div>
+                <div className="text-2xl font-bold text-green-900">
+                  {formattedAppointments?.filter(apt => apt.status === 'confirmed')?.length || 0}
+                </div>
+                <Text className="text-green-700 font-medium">Confirmed</Text>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-orange-50">
+            <div className="space-y-2">
+              <ClockCircleOutlined className="text-4xl text-orange-600" />
+              <div>
+                <div className="text-2xl font-bold text-orange-900">
+                  {formattedAppointments?.filter(apt => apt.status === 'pending')?.length || 0}
+                </div>
+                <Text className="text-orange-700 font-medium">Pending</Text>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-blue-50">
+            <div className="space-y-2">
+              <CheckCircleOutlined className="text-4xl text-blue-600" />
+              <div>
+                <div className="text-2xl font-bold text-blue-900">
+                  {formattedAppointments?.filter(apt => apt.status === 'completed')?.length || 0}
+                </div>
+                <Text className="text-blue-700 font-medium">Completed</Text>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-red-50">
+            <div className="space-y-2">
+              <CloseCircleOutlined className="text-4xl text-red-600" />
+              <div>
+                <div className="text-2xl font-bold text-red-900">
+                  {formattedAppointments?.filter(apt => apt.status === 'cancelled')?.length || 0}
+                </div>
+                <Text className="text-red-700 font-medium">Cancelled</Text>
+              </div>
+            </div>
+          </Card>
         </div>
-      </Card>
-
-      {/* Status Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-green-50">
-          <div className="space-y-2">
-            <CheckCircleOutlined className="text-4xl text-green-600" />
-            <div>
-              <div className="text-2xl font-bold text-green-900">
-                {appointments?.filter(apt => apt.status === 'confirmed')?.length || 0}
-              </div>
-              <Text className="text-green-700 font-medium">Confirmed</Text>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-orange-50">
-          <div className="space-y-2">
-            <ClockCircleOutlined className="text-4xl text-orange-600" />
-            <div>
-              <div className="text-2xl font-bold text-orange-900">
-                {appointments?.filter(apt => apt.status === 'pending')?.length || 0}
-              </div>
-              <Text className="text-orange-700 font-medium">Pending</Text>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="text-center rounded-xl shadow-sm border border-gray-200 bg-red-50">
-          <div className="space-y-2">
-            <CloseCircleOutlined className="text-4xl text-red-600" />
-            <div>
-              <div className="text-2xl font-bold text-red-900">
-                {appointments?.filter(apt => apt.status === 'cancelled')?.length || 0}
-              </div>
-              <Text className="text-red-700 font-medium">Cancelled</Text>
-            </div>
-          </div>
-        </Card>
-      </div>
       </div>
     </div>
   );
