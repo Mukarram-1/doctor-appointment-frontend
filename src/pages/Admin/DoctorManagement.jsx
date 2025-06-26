@@ -91,7 +91,7 @@ const DoctorManagement = () => {
           />
           <div>
             <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>{record.contact?.email || record.email}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px' }}>{record.specialization}</div>
           </div>
         </div>
       ),
