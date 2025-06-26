@@ -90,15 +90,18 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
         </Title>
         <Tag color="blue">{doctor.specialty}</Tag>
         <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
-          {doctor.location}
+          {typeof doctor.location === 'object' && doctor.location 
+            ? `${doctor.location.hospital}, ${doctor.location.address}, ${doctor.location.city}, ${doctor.location.state} ${doctor.location.zipCode}`
+            : doctor.location || 'Location not specified'
+          }
         </Text>
         
         <div style={{ marginTop: '16px' }}>
           <Text strong>Available Days: </Text>
           <Space wrap>
-            {doctor.availability.map((day, index) => (
+            {doctor.availability && doctor.availability.map((availabilitySlot, index) => (
               <Tag key={index} color="green" size="small">
-                {day}
+                {typeof availabilitySlot === 'object' ? availabilitySlot.day : availabilitySlot}
               </Tag>
             ))}
           </Space>

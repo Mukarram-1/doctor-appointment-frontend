@@ -34,11 +34,16 @@ const DoctorManagement = () => {
   const applyFilters = () => {
     let filtered = [...doctors];
     if (searchText) {
-      filtered = filtered.filter(doctor =>
-        doctor.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        doctor.specialization.toLowerCase().includes(searchText.toLowerCase()) ||
-        doctor.location?.toLowerCase().includes(searchText.toLowerCase())
-      );
+      filtered = filtered.filter(doctor => {
+        const searchTerm = searchText.toLowerCase();
+        const locationText = typeof doctor.location === 'object' && doctor.location
+          ? `${doctor.location.hospital} ${doctor.location.city} ${doctor.location.state}`.toLowerCase()
+          : (doctor.location || '').toLowerCase();
+        
+        return doctor.name.toLowerCase().includes(searchTerm) ||
+               doctor.specialization.toLowerCase().includes(searchTerm) ||
+               locationText.includes(searchTerm);
+      });
     }
     setFilteredDoctors(filtered);
   };

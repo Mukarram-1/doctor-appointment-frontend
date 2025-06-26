@@ -60,7 +60,10 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <EnvironmentOutlined style={{ color: '#666' }} />
           <Text type="secondary" style={{ fontSize: '13px' }}>
-            {doctor.location}
+            {typeof doctor.location === 'object' && doctor.location 
+              ? `${doctor.location.hospital}, ${doctor.location.city}`
+              : doctor.location || 'Location not specified'
+            }
           </Text>
         </div>
 
