@@ -25,7 +25,6 @@ const Layout = () => {
 
   const isAdmin = user?.role === 'admin';
 
-  // Check screen size
   useEffect(() => {
     const checkScreenSize = () => {
       const mobile = window.innerWidth < 768;
@@ -73,11 +72,6 @@ const Layout = () => {
 
   const userMenuItems = [
     {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-    },
-    {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Logout',
@@ -92,11 +86,10 @@ const Layout = () => {
     }
   };
 
-  const handleUserMenuClick = ({ key }) => {
+  const handleUserMenuClick = async ({ key }) => {
     if (key === 'logout') {
-      logout();
-      navigate('/login');
-    }
+      await logout();
+    } 
   };
 
   const toggleSidebar = () => {
@@ -192,7 +185,6 @@ const Layout = () => {
           zIndex: 999,
           height: 64
         }}>
-          {/* Menu Toggle */}
           <Button
             type="text"
             icon={<MenuOutlined style={{ fontSize: '16px' }} />}
@@ -259,7 +251,6 @@ const Layout = () => {
           </Dropdown>
         </Header>
 
-        {/* Content - Add proper padding */}
         <Content style={{ 
           overflow: 'initial',
           padding: isMobile ? '16px' : '24px',
