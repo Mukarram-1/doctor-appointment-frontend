@@ -18,17 +18,14 @@ export const AuthProvider = ({ children }) => {
       const storedUser = authService.getCurrentUser();
       
       if (token && storedUser) {
-        // Verify token is still valid by fetching fresh user data
         try {
           const userData = await authService.getProfile();
           setUser(userData);
           setIsAuthenticated(true);
         } catch {
-          // Token is invalid, clear auth state
           await logout();
         }
       } else {
-        // No token or user data
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -63,7 +60,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.register(userData);
       
-      // Auto-login after successful registration
       if (response.user && response.accessToken) {
         setUser(response.user);
         setIsAuthenticated(true);
@@ -83,49 +79,22 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      setLoading(true);
       await authService.logout();
-    } catch (error) {
-      console.warn('Server logout failed:', error);
-    } finally {
       setUser(null);
       setIsAuthenticated(false);
       message.success('Logged out successfully');
-    }
-  };
-
-  const updateProfile = async (profileData) => {
-    try {
-      setLoading(true);
-      const updatedUser = await authService.updateProfile(profileData);
-      setUser(updatedUser);
-      message.success('Profile updated successfully!');
-      return { success: true };
+      window.location.href = '/login';
     } catch (error) {
-      message.error(error.message || 'Failed to update profile');
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const changePassword = async (passwordData) => {
-    try {
-      setLoading(true);
-      await authService.changePassword(passwordData);
-      // User will be logged out automatically after password change
+      console.warn('Logout failed:', error);
       setUser(null);
       setIsAuthenticated(false);
-      message.success('Password changed successfully! Please login with your new password.');
-      return { success: true };
-    } catch (error) {
-      message.error(error.message || 'Failed to change password');
-      return { success: false, error: error.message };
+      window.location.href = '/login';
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper methods
   const isAdmin = () => {
     return user?.role === 'admin';
   };
@@ -145,8 +114,6 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
-    updateProfile,
-    changePassword,
     checkAuthState,
     isAdmin,
     isUser,

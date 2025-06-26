@@ -18,7 +18,6 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Doctor operations
   const fetchDoctors = async (filters = {}) => {
     try {
       setLoading(true);
@@ -69,7 +68,6 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Appointment operations
   const fetchAppointments = async (filters = {}) => {
     try {
       setLoading(true);
@@ -112,6 +110,8 @@ export const AppProvider = ({ children }) => {
     doctors,
     appointments,
     loading,
+    setDoctors,
+    setAppointments,
     fetchDoctors,
     createDoctor,
     updateDoctor,
