@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Modal, Form, DatePicker, TimePicker, Button, Typography, Space, Tag } from 'antd';
+import { Modal, Form, DatePicker, TimePicker, Button, Typography, Space, Tag, Input } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { useAuth } from '../../hooks/useAuth';
 import { useApp } from '../../contexts/AppContext';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
@@ -19,11 +20,13 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
     try {
       const appointmentData = {
         userId: user.id,
-        doctorId: doctor.id,
+        doctorId: doctor._id || doctor.id,
         doctorName: doctor.name,
         userName: user.name,
         date: values.date.format('YYYY-MM-DD'),
         time: values.time.format('HH:mm'),
+        reason: values.reason,
+        notes: values.notes || '',
       };
 
       const result = await createAppointment(appointmentData);
@@ -138,6 +141,31 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
             placeholder="Select time"
             minuteStep={15}
             disabledTime={disabledTime}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="reason"
+          label="Reason for Appointment"
+          rules={[{ required: true, message: 'Please provide a reason for your appointment!' }]}
+        >
+          <TextArea
+            placeholder="Describe your symptoms or reason for the visit"
+            rows={3}
+            maxLength={500}
+            showCount
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="notes"
+          label="Additional Notes (Optional)"
+        >
+          <TextArea
+            placeholder="Any additional information you'd like to share"
+            rows={2}
+            maxLength={1000}
+            showCount
           />
         </Form.Item>
 
