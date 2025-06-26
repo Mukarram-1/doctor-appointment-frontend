@@ -36,19 +36,20 @@ const DoctorDirectory = () => {
     if (filters.search) {
       filtered = filtered.filter(doctor => {
         const searchTerm = filters.search.toLowerCase();
-        const locationText = typeof doctor.location === 'object' && doctor.location
+        const locationText = doctor.location 
           ? `${doctor.location.hospital} ${doctor.location.city} ${doctor.location.state}`.toLowerCase()
-          : (doctor.location || '').toLowerCase();
+          : '';
         
         return doctor.name.toLowerCase().includes(searchTerm) ||
-               doctor.specialization.toLowerCase().includes(searchTerm) ||
-               locationText.includes(searchTerm);
+               doctor.specialty.toLowerCase().includes(searchTerm) ||
+               locationText.includes(searchTerm) ||
+               (doctor.qualifications && doctor.qualifications.toLowerCase().includes(searchTerm));
       });
     }
 
     if (filters.specialty) {
       filtered = filtered.filter(doctor =>
-        doctor.specialization.toLowerCase() === filters.specialty.toLowerCase()
+        doctor.specialty && doctor.specialty.toLowerCase() === filters.specialty.toLowerCase()
       );
     }
 
@@ -69,7 +70,7 @@ const DoctorDirectory = () => {
     setSelectedDoctor(null);
   };
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialization))];
+  const specialties = [...new Set(doctors.map(doctor => doctor.specialty).filter(Boolean))];
 
   return (
     <div className="max-w-7xl mx-auto">
