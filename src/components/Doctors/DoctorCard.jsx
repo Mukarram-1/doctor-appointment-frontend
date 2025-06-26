@@ -4,7 +4,10 @@ import {
   EnvironmentOutlined, 
   PhoneOutlined, 
   CalendarOutlined,
-  ClockCircleOutlined 
+  ClockCircleOutlined,
+  MailOutlined,
+  DollarOutlined,
+  StarFilled
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -37,11 +40,21 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
             }}
           />
           <Title level={4} style={{ margin: 0 }}>
-            {doctor.name}
+            Dr. {doctor.name}
           </Title>
           <Tag color="blue" style={{ marginTop: '8px' }}>
-            {doctor.specialty || doctor.specialization}
+            {doctor.specialty}
           </Tag>
+          <div style={{ marginTop: '8px' }}>
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              {doctor.qualifications}
+            </Text>
+          </div>
+          <div style={{ marginTop: '4px' }}>
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              {doctor.experience} years experience
+            </Text>
+          </div>
         </div>
       }
       actions={isUser ? [
@@ -60,19 +73,46 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <EnvironmentOutlined style={{ color: '#666' }} />
           <Text type="secondary" style={{ fontSize: '13px' }}>
-            {typeof doctor.location === 'object' && doctor.location 
-              ? `${doctor.location.hospital}, ${doctor.location.city}`
-              : doctor.location || 'Location not specified'
-            }
+            {doctor.location?.hospital}
+          </Text>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <EnvironmentOutlined style={{ color: '#666' }} />
+          <Text type="secondary" style={{ fontSize: '13px' }}>
+            {doctor.location?.city}, {doctor.location?.state}
           </Text>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <PhoneOutlined style={{ color: '#666' }} />
           <Text type="secondary" style={{ fontSize: '13px' }}>
-            {doctor.contact}
+            {doctor.contact?.phone}
           </Text>
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MailOutlined style={{ color: '#666' }} />
+          <Text type="secondary" style={{ fontSize: '13px' }}>
+            {doctor.contact?.email}
+          </Text>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <DollarOutlined style={{ color: '#666' }} />
+          <Text type="secondary" style={{ fontSize: '13px' }}>
+            Consultation: ${doctor.consultationFee}
+          </Text>
+        </div>
+
+        {doctor.rating > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <StarFilled style={{ color: '#fadb14' }} />
+            <Text type="secondary" style={{ fontSize: '13px' }}>
+              {doctor.rating}/5 ({doctor.totalReviews} reviews)
+            </Text>
+          </div>
+        )}
 
         <div style={{ marginTop: '12px' }}>
           <div style={{ 
@@ -85,9 +125,9 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
             <Text strong style={{ fontSize: '13px' }}>Available Days:</Text>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-            {doctor.availability.map((day, index) => (
+            {doctor.availability?.map((slot, index) => (
               <Tag key={index} size="small" color="green">
-                {day}
+                {typeof slot === 'object' ? `${slot.day}` : slot}
               </Tag>
             ))}
           </div>
