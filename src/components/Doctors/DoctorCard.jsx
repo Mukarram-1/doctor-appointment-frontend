@@ -5,7 +5,7 @@ import {
   PhoneOutlined, 
   CalendarOutlined,
   ClockCircleOutlined,
-  MailOutlined,
+
   DollarOutlined,
   StarFilled
 } from '@ant-design/icons';
@@ -91,12 +91,7 @@ const DoctorCard = ({ doctor, onBookAppointment }) => {
           </Text>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MailOutlined style={{ color: '#666' }} />
-          <Text type="secondary" style={{ fontSize: '13px' }}>
-            {doctor.contact?.email}
-          </Text>
-        </div>
+
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <DollarOutlined style={{ color: '#666' }} />

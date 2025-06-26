@@ -78,15 +78,14 @@ const DoctorForm = ({ doctor, onSubmit, onCancel }) => {
           </Form.Item>
 
           <Form.Item
-            name="email"
-            label={<span style={{ color: '#374151', fontWeight: 500 }}>Email</span>}
+            name="qualifications"
+            label={<span style={{ color: '#374151', fontWeight: 500 }}>Qualifications</span>}
             rules={[
-              { required: true, message: 'Please enter email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
+              { required: true, message: 'Please enter qualifications!' }
             ]}
           >
             <Input
-              placeholder="doctor@example.com"
+              placeholder="MBBS, MD, etc."
               style={{
                 borderRadius: '8px',
                 border: '1px solid #d1d5db',

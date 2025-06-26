@@ -117,7 +117,7 @@ const AppointmentModal = ({ visible, doctor, onCancel, onSuccess }) => {
     >
       <div style={{ marginBottom: '24px' }}>
         <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-          Dr. {doctor.name}
+          {doctor.name}
         </Title>
         <Tag color="blue">{doctor.specialty}</Tag>
         <div style={{ marginTop: '8px' }}>

@@ -82,7 +82,7 @@ const ManageAppointments = () => {
       ...appointment,
       key: appointment._id || appointment.id,
       patientName: appointment.userId?.name || appointment.patientName || 'N/A',
-      patientEmail: appointment.userId?.email || appointment.patientEmail || 'N/A',
+
       doctorName: appointment.doctorId?.name || appointment.doctorName || 'N/A',
       doctorSpecialization: appointment.doctorId?.specialty || appointment.doctorSpecialization || 'N/A',
       fee: appointment.doctorId?.consultationFee || appointment.fee || 0,
@@ -116,9 +116,7 @@ const ManageAppointments = () => {
             <Text className="font-medium text-gray-900 block truncate">
               {record.patientName}
             </Text>
-            <Text className="text-gray-500 text-sm block truncate">
-              {record.patientEmail}
-            </Text>
+
           </div>
         </div>
       ),
