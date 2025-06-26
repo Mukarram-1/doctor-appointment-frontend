@@ -41,9 +41,17 @@ const appointmentService = {
     }
   },
 
-  async updateAppointmentStatus(id, status) {
+  async updateAppointmentStatus(id, status, cancellationReason = '') {
     try {
-      const response = await api.patch(`/appointments/${id}/status`, { status });
+      const payload = { status };
+      
+      
+      if (status === 'cancelled') {
+        payload.cancellationReason = cancellationReason || 'Cancelled by admin';
+        payload.cancelledBy = 'admin';
+      }
+      
+      const response = await api.patch(`/appointments/${id}/status`, payload);
       
       if (response.data.success) {
         return response.data.data;

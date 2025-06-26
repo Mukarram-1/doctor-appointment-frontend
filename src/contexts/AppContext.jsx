@@ -24,7 +24,7 @@ export const AppProvider = ({ children }) => {
       const data = await doctorService.getDoctors(filters);
       setDoctors(data);
       return data;
-    } catch (error) {
+    } catch {
       message.error('Failed to fetch doctors');
       return [];
     } finally {
@@ -74,7 +74,7 @@ export const AppProvider = ({ children }) => {
       const data = await appointmentService.getAppointments(filters);
       setAppointments(data);
       return data;
-    } catch (error) {
+    } catch {
       message.error('Failed to fetch appointments');
       return [];
     } finally {
@@ -94,9 +94,9 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const updateAppointmentStatus = async (id, status) => {
+  const updateAppointmentStatus = async (id, status, cancellationReason = '') => {
     try {
-      const updatedAppointment = await appointmentService.updateAppointmentStatus(id, status);
+      const updatedAppointment = await appointmentService.updateAppointmentStatus(id, status, cancellationReason);
       setAppointments(prev => prev.map(apt => (apt._id || apt.id) === id ? updatedAppointment : apt));
       message.success(`Appointment ${status} successfully`);
       return { success: true, data: updatedAppointment };

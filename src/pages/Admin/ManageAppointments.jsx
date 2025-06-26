@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Tag, Typography, Input, Select, Space, Tooltip, message } from 'antd';
+import { Card, Table, Button, Tag, Typography, Input, Select, Space, Tooltip, message, Modal } from 'antd';
 import { 
   SearchOutlined, 
   FilterOutlined, 
@@ -16,12 +16,16 @@ import appointmentService from '../../services/appointmentService';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
 
 const ManageAppointments = () => {
   const { appointments, fetchAppointments, loading } = useApp();
   const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState('');
 
   useEffect(() => {
     loadAppointments();
@@ -32,6 +36,12 @@ const ManageAppointments = () => {
   };
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
+    if (newStatus === 'cancelled') {
+      setSelectedAppointment(appointmentId);
+      setCancelModalVisible(true);
+      return;
+    }
+
     try {
       setActionLoading(true);
       await appointmentService.updateAppointmentStatus(appointmentId, newStatus);
@@ -45,6 +55,36 @@ const ManageAppointments = () => {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!cancellationReason.trim()) {
+      message.error('Please provide a cancellation reason');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await appointmentService.updateAppointmentStatus(selectedAppointment, 'cancelled', cancellationReason);
+      
+      await loadAppointments();
+      
+      message.success('Appointment cancelled successfully');
+      setCancelModalVisible(false);
+      setCancellationReason('');
+      setSelectedAppointment(null);
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      message.error('Failed to cancel appointment');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelModal = () => {
+    setCancelModalVisible(false);
+    setCancellationReason('');
+    setSelectedAppointment(null);
   };
 
   const getStatusIcon = (status) => {
@@ -397,6 +437,32 @@ const ManageAppointments = () => {
           </Card>
         </div>
       </div>
+
+      {/* Cancellation Modal */}
+      <Modal
+        title="Cancel Appointment"
+        open={cancelModalVisible}
+        onOk={handleCancelAppointment}
+        onCancel={handleCancelModal}
+        confirmLoading={actionLoading}
+        okText="Cancel Appointment"
+        okButtonProps={{ danger: true }}
+        cancelText="Keep Appointment"
+      >
+        <div className="space-y-4">
+          <Text className="text-gray-600">
+            Please provide a reason for cancelling this appointment:
+          </Text>
+          <TextArea
+            placeholder="Enter cancellation reason..."
+            value={cancellationReason}
+            onChange={(e) => setCancellationReason(e.target.value)}
+            rows={3}
+            maxLength={200}
+            showCount
+          />
+        </div>
+      </Modal>
     </div>
   );
 };
