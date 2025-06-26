@@ -8,7 +8,6 @@ const authService = {
       if (response.data.success) {
         const { user, accessToken, tokenType, expiresIn } = response.data.data;
         
-        // Store tokens in localStorage
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('user', JSON.stringify(user));
         
@@ -36,7 +35,6 @@ const authService = {
       if (response.data.success) {
         const { user, tokens } = response.data.data;
         
-        // Store tokens in localStorage
         localStorage.setItem('accessToken', tokens.accessToken);
         localStorage.setItem('user', JSON.stringify(user));
         
@@ -77,38 +75,6 @@ const authService = {
     }
   },
 
-  async updateProfile(profileData) {
-    try {
-      const response = await api.put('/auth/profile', profileData);
-      
-      if (response.data.success) {
-        const user = response.data.data;
-        localStorage.setItem('user', JSON.stringify(user));
-        return user;
-      } else {
-        throw new Error(response.data.message || 'Failed to update profile');
-      }
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to update profile');
-    }
-  },
-
-  async changePassword(passwordData) {
-    try {
-      const response = await api.put('/auth/change-password', passwordData);
-      
-      if (response.data.success) {
-        // Password changed successfully, user needs to login again
-        this.logout();
-        return response.data.message;
-      } else {
-        throw new Error(response.data.message || 'Failed to change password');
-      }
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to change password');
-    }
-  },
-
   async refreshToken() {
     try {
       const response = await api.post('/auth/refresh-token');
@@ -127,33 +93,10 @@ const authService = {
   },
 
   async logout() {
-    try {
-      // Try to logout from server
-      await api.post('/auth/logout');
-    } catch (error) {
-      // Continue with local logout even if server logout fails
-      console.warn('Server logout failed:', error.message);
-    } finally {
-      // Always clear local storage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-    }
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   },
-
-  async logoutAll() {
-    try {
-      await api.post('/auth/logout-all');
-    } catch (err) {
-      console.warn('Server logout-all failed:', err.message);
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-    }
-  },
-
-  // Helper methods
   getCurrentUser() {
     try {
       const userStr = localStorage.getItem('user');
