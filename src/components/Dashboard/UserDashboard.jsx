@@ -23,7 +23,7 @@ const UserDashboard = () => {
     totalAppointments: 0,
     pendingAppointments: 0,
     confirmedAppointments: 0,
-    upcomingAppointments: 0
+    completedAppointments: 0
   });
   const { user } = useAuth();
   const { appointments, fetchAppointments } = useApp();
@@ -31,37 +31,32 @@ const UserDashboard = () => {
 
   useEffect(() => {
     loadUserAppointments();
-  }, [user?.id]);
+  }, [user?._id, user?.id]);
 
   useEffect(() => {
-    const myAppointments = appointments.filter(apt => apt.userId === user?.id);
+    const userId = user?._id || user?.id;
+    const myAppointments = appointments.filter(apt => 
+      (apt.userId === userId) || (apt.userId?._id === userId) || (apt.userId?.id === userId)
+    );
     setUserAppointments(myAppointments);
-
-    const today = new Date().toISOString().split('T')[0];
-    const upcoming = myAppointments.filter(apt => apt.date >= today && apt.status !== 'cancelled');
     
     setStats({
       totalAppointments: myAppointments.length,
       pendingAppointments: myAppointments.filter(apt => apt.status === 'pending').length,
       confirmedAppointments: myAppointments.filter(apt => apt.status === 'confirmed').length,
-      upcomingAppointments: upcoming.length
+      completedAppointments: myAppointments.filter(apt => apt.status === 'completed').length
     });
-  }, [appointments, user?.id]);
+  }, [appointments, user?._id, user?.id]);
 
   const loadUserAppointments = async () => {
-    if (user?.id) {
-      const userId = user._id || user.id;
+    const userId = user?._id || user?.id;
+    if (userId) {
       await fetchAppointments({ userId });
     }
   };
 
-  const upcomingAppointments = userAppointments
-    .filter(apt => {
-      const appointmentDate = new Date(apt.date);
-      const today = new Date();
-      return appointmentDate >= today && apt.status !== 'cancelled';
-    })
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
+  const recentAppointments = userAppointments
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
   const statsData = [
@@ -72,14 +67,6 @@ const UserDashboard = () => {
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
       borderColor: 'border-blue-200'
-    },
-    {
-      title: 'Upcoming',
-      value: stats.upcomingAppointments,
-      icon: <ClockCircleOutlined />,
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-      borderColor: 'border-green-200'
     },
     {
       title: 'Pending',
@@ -96,6 +83,14 @@ const UserDashboard = () => {
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
       borderColor: 'border-green-200'
+    },
+    {
+      title: 'Completed',
+      value: stats.completedAppointments,
+      icon: <CheckCircleOutlined />,
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      borderColor: 'border-purple-200'
     }
   ];
 
@@ -128,7 +123,6 @@ const UserDashboard = () => {
         description="Manage your appointments and find doctors."
       />
 
-      {/* Statistics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsData.map((stat, index) => (
           <StatCard key={index} {...stat} />
@@ -136,7 +130,6 @@ const UserDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
         <div className="lg:col-span-1">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
@@ -158,11 +151,10 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Upcoming Appointments */}
         <div className="lg:col-span-2">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Upcoming Appointments</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Recent Appointments</h3>
               <Button 
                 type="link" 
                 onClick={() => navigate('/my-appointments')}
@@ -172,26 +164,31 @@ const UserDashboard = () => {
               </Button>
             </div>
             
-            {upcomingAppointments.length > 0 ? (
+            {recentAppointments.length > 0 ? (
               <List
-                dataSource={upcomingAppointments}
+                dataSource={recentAppointments}
                 renderItem={(appointment) => (
                   <List.Item className="px-0 py-4 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex-1">
                         <div className="font-medium text-gray-900 mb-1">
-                          Appointment with {appointment.doctorName}
+                          {appointment.doctorName || appointment.doctorId?.name || 'Doctor'}
                         </div>
                         <div className="flex items-center gap-4 text-gray-500 text-sm">
                           <div className="flex items-center gap-1">
                             <CalendarOutlined />
-                            <span>{appointment.date}</span>
+                            <span>{new Date(appointment.date).toLocaleDateString()}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <ClockCircleOutlined />
                             <span>{appointment.time}</span>
                           </div>
                         </div>
+                        {appointment.reason && (
+                          <div className="text-gray-500 text-sm mt-1">
+                            {appointment.reason}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusIcon status={appointment.status} />
@@ -206,7 +203,7 @@ const UserDashboard = () => {
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <span className="text-gray-500">
-                    No upcoming appointments
+                    No appointments yet
                   </span>
                 }
                 className="py-8"
